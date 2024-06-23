@@ -4,22 +4,23 @@
 #![deny(clippy::missing_docs_in_private_items)]
 #![deny(missing_docs)]
 
+use scanner::Scanner;
 use source::Source;
 
+pub mod scanner;
 pub mod source;
+pub mod token;
 
 fn main() {
-    let hello_world_src = Source::from_path("examples/hello_world.zen").unwrap();
+    let test = Source::from_path("examples/hello_world.zen").unwrap();
 
-    println!("Path: {}", hello_world_src.path().display());
-    println!("== Contents ==\n{}\n==============", hello_world_src.contents());
+    let mut scanner = Scanner::new(&test);
 
-    println!(
-        "Source position for offset 0: {:?}",
-        hello_world_src.source_position(0)
-    );
-    println!(
-        "Source position for offset 40: {:?}",
-        hello_world_src.source_position(40)
-    );
+    loop {
+        match scanner.scan_next() {
+            Ok(None) => break,
+            Ok(Some(token)) => println!("{:?}", token),
+            Err(err) => eprintln!("{}", err),
+        }
+    }
 }

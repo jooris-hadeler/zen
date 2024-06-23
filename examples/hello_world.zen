@@ -1,3 +1,9 @@
+import print, println from std.io;
+import std.env;
+
+// externally defined print function
 extern fn print(content: str);
 
 fn main() => print("Hello, World!");
+
+fn add(x: i32, y: i32) -> i32 => a + b;
