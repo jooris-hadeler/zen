@@ -1,0 +1,3 @@
+extern fn print(content: str);
+
+fn main() => print("Hello, World!");
