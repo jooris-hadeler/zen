@@ -104,12 +104,6 @@ impl Debug for SourceId {
     }
 }
 
-impl From<usize> for SourceId {
-    fn from(id: usize) -> Self {
-        Self(id)
-    }
-}
-
 #[derive(Debug, Clone, Copy)]
 /// Represents a span in the source file.
 pub struct Span {
@@ -151,9 +145,12 @@ impl SourceList {
     }
 
     /// Adds a source file to the list.
-    pub fn add_source(&mut self, source: Source) -> SourceId {
+    pub fn add_source(&mut self, mut source: Source) -> SourceId {
         let path = source.path().clone();
         let id = SourceId(self.sources.len());
+
+        // Set the id of the source file.
+        source.set_id(id);
 
         self.sources.push(source);
         self.source_map.insert(path, id);
