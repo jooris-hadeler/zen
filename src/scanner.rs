@@ -13,8 +13,8 @@ use crate::{
 type ScannerResult = Result<Option<Token>, ScannerError>;
 
 #[derive(Debug)]
-/// The scanner struct is responsible for scanning the source code and producing tokens.
-/// It keeps track of the current position in the source code and the start of the current token.
+/// The scanner struct is responsible for performing lexical analysis on the source code.
+/// It reads the source code character by character and produces a stream of tokens.
 pub struct Scanner<'src> {
     /// The source file to scan.
     source: &'src Source,
@@ -75,6 +75,30 @@ impl<'src> Scanner<'src> {
                 }
                 _ => break,
             }
+        }
+    }
+
+    /// Collects all the tokens from the source file.
+    /// Returns none if an error occurred during scanning.
+    pub fn collect(mut self) -> Option<Vec<Token>> {
+        let mut tokens = Vec::new();
+        let mut errored = false;
+
+        loop {
+            match self.scan_next() {
+                Ok(Some(token)) => tokens.push(token),
+                Ok(None) => break,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    errored = true;
+                }
+            }
+        }
+
+        if !errored {
+            Some(tokens)
+        } else {
+            None
         }
     }
 
