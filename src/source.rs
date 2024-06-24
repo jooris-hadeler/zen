@@ -1,6 +1,6 @@
 //! The source module provides the `Source` struct, and all the tools needed to work with source files.
 
-use std::{fmt::Debug, path::PathBuf};
+use std::{collections::HashMap, fmt::Debug, path::PathBuf};
 
 #[derive(Debug, Clone)]
 /// Represents a source file.
@@ -61,8 +61,8 @@ impl Source {
     }
 
     /// Sets the id of the source file.
-    pub fn set_id(&mut self, id: SourceId) {
-        self.id = id;
+    pub fn set_id<S: Into<SourceId>>(&mut self, id: S) {
+        self.id = id.into();
     }
 
     /// Returns the line number and column for the given byte offset.
@@ -104,6 +104,12 @@ impl Debug for SourceId {
     }
 }
 
+impl From<usize> for SourceId {
+    fn from(id: usize) -> Self {
+        Self(id)
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 /// Represents a span in the source file.
 pub struct Span {
@@ -123,5 +129,46 @@ impl Span {
             end,
             source_id,
         }
+    }
+}
+
+#[derive(Debug)]
+/// Represents a list of source files.
+pub struct SourceList {
+    /// List of source files.
+    sources: Vec<Source>,
+    /// Map of source files to their ids.
+    source_map: HashMap<PathBuf, SourceId>,
+}
+
+impl SourceList {
+    /// Creates a new source list.
+    pub fn new() -> Self {
+        Self {
+            sources: Vec::new(),
+            source_map: HashMap::new(),
+        }
+    }
+
+    /// Adds a source file to the list.
+    pub fn add_source(&mut self, source: Source) -> SourceId {
+        let path = source.path().clone();
+        let id = SourceId(self.sources.len());
+
+        self.sources.push(source);
+        self.source_map.insert(path, id);
+
+        id
+    }
+
+    /// Returns the source file for the given id.
+    pub fn get_source(&self, id: SourceId) -> Option<&Source> {
+        self.sources.get(id.0)
+    }
+
+    /// Returns the source for the given path.
+    pub fn get_source_by_path(&self, path: &PathBuf) -> Option<&Source> {
+        let id = self.source_map.get(path)?;
+        self.sources.get(id.0)
     }
 }

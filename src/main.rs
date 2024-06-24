@@ -5,16 +5,17 @@
 #![deny(missing_docs)]
 
 use scanner::Scanner;
-use source::Source;
+use source::{Source, SourceList};
 
 pub mod scanner;
 pub mod source;
 pub mod token;
 
 fn main() {
-    let test = Source::from_path("examples/hello_world.zen").unwrap();
+    let mut sources = SourceList::new();
+    let id = sources.add_source(Source::from_path("examples/hello_world.zen").unwrap());
 
-    let mut scanner = Scanner::new(&test);
+    let mut scanner = Scanner::new(sources.get_source(id).unwrap());
 
     loop {
         match scanner.scan_next() {
