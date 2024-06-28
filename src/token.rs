@@ -125,6 +125,8 @@ pub enum TokenKind {
     RBracket,
     /// Represents the `:` token.
     Colon,
+    /// Represents the `::` token.
+    DoubleColon,
     /// Represents the `;` token.
     Semicolon,
     /// Represents the `.` token.

@@ -79,7 +79,12 @@ pub enum LiteralKind {
 #[derive(Debug, PartialEq)]
 /// Represents an enum literal in the `zen` language.
 pub struct EnumLiteral {
-    // TODO: Implement the `EnumLiteral` struct.
+    /// The name of the enum.
+    pub name: Box<str>,
+    /// The variant of the enum.
+    pub variant: Box<str>,
+    /// The body of the enum literal.
+    pub body: Option<Box<[StructField]>>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -92,7 +97,21 @@ pub struct SliceLiteral {
 #[derive(Debug, PartialEq)]
 /// Represents a struct literal in the `zen` language.
 pub struct StructLiteral {
-    // TODO: Implement the `StructLiteral` struct.
+    /// The name of the struct.
+    pub name: Box<str>,
+    /// The fields of the struct literal.
+    pub fields: Box<[StructField]>,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a field in a struct literal.
+pub struct StructField {
+    /// The name of the field.
+    pub name: Box<str>,
+    /// The value of the field.
+    pub value: Expr,
+    /// The span of the field in the source code.
+    pub span: Span,
 }
 
 #[derive(Debug, PartialEq)]

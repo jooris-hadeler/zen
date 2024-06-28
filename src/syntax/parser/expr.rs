@@ -3,8 +3,8 @@
 use crate::{
     source::Span,
     syntax::ast::{
-        AtomExpr, AtomKind, BinaryExpr, BinaryOp, Expr, LiteralExpr, LiteralKind, SliceLiteral,
-        SymbolExpr, UnaryExpr, UnaryOp,
+        AtomExpr, AtomKind, BinaryExpr, BinaryOp, EnumLiteral, Expr, LiteralExpr, LiteralKind,
+        SliceLiteral, StructField, StructLiteral, SymbolExpr, UnaryExpr, UnaryOp,
     },
     token::TokenKind,
 };
@@ -278,7 +278,119 @@ impl Parser<'_> {
 
     /// Parses a struct or enum literal expression.
     fn parse_expr_literal_struct_or_enum(&mut self) -> Option<Expr> {
-        todo!()
+        // Consume the dot.
+        let dot_token = self.consume();
+
+        // Parse the symbol.
+        // For now, we only allow symbols to be used as struct or enum names.
+        // In the future, we might want to allow expressions to be used as struct or enum names.
+        let Some(symbol) = self.expect(TokenKind::Symbol) else {
+            return None;
+        };
+
+        let symbol_name = symbol.text.into();
+
+        // Parse the struct or enum fields.
+        match self.peek().kind {
+            TokenKind::LBrace => self.parse_expr_literal_struct(symbol_name, dot_token.span),
+            TokenKind::DoubleColon => self.parse_expr_literal_enum(symbol_name, dot_token.span),
+            _ => return None,
+        }
+    }
+
+    /// Parses a struct literal expression.
+    fn parse_expr_literal_struct(&mut self, name: Box<str>, span: Span) -> Option<Expr> {
+        // Consume the left brace.
+        self.consume();
+
+        // Parse the struct fields.
+        let fields = self.parse_expr_literal_struct_fields()?;
+
+        // Consume the right brace.
+        let Some(right_brace_token) = self.expect(TokenKind::RBrace) else {
+            return None;
+        };
+
+        // Create the struct literal expression.
+        let span = Span::new(span.start, right_brace_token.span.end, self.source.id());
+        Some(Expr::Literal(LiteralExpr {
+            kind: LiteralKind::Struct(StructLiteral { name, fields }),
+            span,
+        }))
+    }
+
+    /// Parses a comma-separated list of struct fields.
+    fn parse_expr_literal_struct_fields(&mut self) -> Option<Box<[StructField]>> {
+        let mut fields = Vec::new();
+
+        // Parse the first field.
+        if let Some(field) = self.parse_expr_literal_struct_field() {
+            fields.push(field);
+        }
+
+        // Parse the remaining fields.
+        while self.peek().kind == TokenKind::Comma {
+            // Consume the comma.
+            self.consume();
+
+            // Parse the next field.
+            fields.push(self.parse_expr_literal_struct_field()?);
+        }
+
+        Some(fields.into())
+    }
+
+    /// Parses a struct field.
+    fn parse_expr_literal_struct_field(&mut self) -> Option<StructField> {
+        // Parse the field name.
+        let name = self.expect(TokenKind::Symbol)?;
+
+        // Parse the colon.
+        self.expect(TokenKind::Colon)?;
+
+        // Parse the field value.
+        let value = self.parse_expr()?;
+        let span = Span::new(name.span.start, value.span().end, self.source.id());
+
+        Some(StructField {
+            name: name.text.into(),
+            value,
+            span,
+        })
+    }
+
+    /// Parses an enum literal expression.
+    fn parse_expr_literal_enum(&mut self, name: Box<str>, mut span: Span) -> Option<Expr> {
+        // Consume the double colon.
+        self.expect(TokenKind::DoubleColon)?;
+
+        // Parse the variant name.
+        let variant = self.expect(TokenKind::Symbol)?;
+        span.end = variant.span.end;
+
+        // Parse the enum body.
+        let mut body = None;
+        if self.peek().kind == TokenKind::LBrace {
+            // Parse the left brace.
+            self.consume();
+
+            // Parse the enum fields.
+            body = Some(self.parse_expr_literal_struct_fields()?);
+
+            // Consume the right brace.
+            let right_brace_token = self.expect(TokenKind::RBrace)?;
+            span.end = right_brace_token.span.end;
+        }
+
+        // Create the enum literal expression.
+        Some(Expr::Literal(LiteralExpr {
+            kind: LiteralKind::Enum(EnumLiteral {
+                name,
+                variant: variant.text.into(),
+                body,
+            }),
+            span,
+        }))
     }
 
     /// Parses an atom expression.

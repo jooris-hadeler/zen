@@ -230,7 +230,14 @@ impl<'src> Scanner<'src> {
 
         let kind = match self.advance() {
             '.' => TokenKind::Dot,
-            ':' => TokenKind::Colon,
+            ':' => {
+                if self.peek(0) == Some(':') {
+                    self.advance();
+                    TokenKind::DoubleColon
+                } else {
+                    TokenKind::Colon
+                }
+            }
             ',' => TokenKind::Comma,
             ';' => TokenKind::Semicolon,
             _ => unreachable!(),

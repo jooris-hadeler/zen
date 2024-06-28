@@ -81,7 +81,7 @@ impl Source {
             .copied()
             .unwrap();
 
-        (idx, offset - start)
+        (idx, 1 + offset - start)
     }
 }
 
