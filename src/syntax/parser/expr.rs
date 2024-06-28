@@ -46,10 +46,8 @@ impl Parser<'_> {
             let expr = self.parse_expr_bp(0)?;
 
             // Consume the right parenthesis.
-            if let None = self.expect(TokenKind::RParen) {
-                // TODO: if we add recovery, we should recover here.
-                return None;
-            }
+            // TODO: if we add recovery, we should recover here.
+            self.expect(TokenKind::RParen)?;
 
             expr
         } else {
@@ -144,13 +142,14 @@ impl Parser<'_> {
             BinaryOp::BitwiseXor => (11, 12),
             BinaryOp::BitwiseAnd => (13, 14),
             BinaryOp::Equal | BinaryOp::Unequal => (15, 16),
-            BinaryOp::LessThan | BinaryOp::LessEqual | BinaryOp::GreaterThan | BinaryOp::GreaterEqual => (17, 18),
+            BinaryOp::LessThan
+            | BinaryOp::LessEqual
+            | BinaryOp::GreaterThan
+            | BinaryOp::GreaterEqual => (17, 18),
             BinaryOp::Add | BinaryOp::Subtract => (19, 20),
             BinaryOp::Multiply | BinaryOp::Divide | BinaryOp::Modulo => (21, 22),
             BinaryOp::Member => (27, 28),
-
-            // If the operator is not an infix operator, panic.
-            _ => unreachable!("this point should not be reached, since this method should only be called if we have a valid infix operator!")
+            // Handle all BinaryOperators here. If the operator is not an infix operator, panic.
         }
     }
 
@@ -239,9 +238,7 @@ impl Parser<'_> {
         let elements = self.parse_expr_literal_slice_elements()?;
 
         // Consume the right bracket.
-        let Some(right_bracket_token) = self.expect(TokenKind::RBracket) else {
-            return None;
-        };
+        let right_bracket_token = self.expect(TokenKind::RBracket)?;
 
         // Create the slice literal expression.
         let span = Span::new(
@@ -284,9 +281,7 @@ impl Parser<'_> {
         // Parse the symbol.
         // For now, we only allow symbols to be used as struct or enum names.
         // In the future, we might want to allow expressions to be used as struct or enum names.
-        let Some(symbol) = self.expect(TokenKind::Symbol) else {
-            return None;
-        };
+        let symbol = self.expect(TokenKind::Symbol)?;
 
         let symbol_name = symbol.text.into();
 
@@ -294,7 +289,7 @@ impl Parser<'_> {
         match self.peek().kind {
             TokenKind::LBrace => self.parse_expr_literal_struct(symbol_name, dot_token.span),
             TokenKind::DoubleColon => self.parse_expr_literal_enum(symbol_name, dot_token.span),
-            _ => return None,
+            _ => None,
         }
     }
 
@@ -307,9 +302,7 @@ impl Parser<'_> {
         let fields = self.parse_expr_literal_struct_fields()?;
 
         // Consume the right brace.
-        let Some(right_brace_token) = self.expect(TokenKind::RBrace) else {
-            return None;
-        };
+        let right_brace_token = self.expect(TokenKind::RBrace)?;
 
         // Create the struct literal expression.
         let span = Span::new(span.start, right_brace_token.span.end, self.source.id());
@@ -323,9 +316,9 @@ impl Parser<'_> {
     fn parse_expr_literal_struct_fields(&mut self) -> Option<Box<[StructField]>> {
         let mut fields = Vec::new();
 
-        // Parse the first field.
-        if let Some(field) = self.parse_expr_literal_struct_field() {
-            fields.push(field);
+        // Try parsing the first field.
+        if self.peek().kind == TokenKind::Symbol {
+            fields.push(self.parse_expr_literal_struct_field()?);
         }
 
         // Parse the remaining fields.

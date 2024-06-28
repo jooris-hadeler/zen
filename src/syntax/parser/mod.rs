@@ -65,11 +65,13 @@ impl<'src> Parser<'src> {
                 ))
                 .cyan(),
                 style("error:").red().bold(),
-                format!(
+                style(format!(
                     "expected token of kind {:?}, found {:?}",
                     kind,
                     self.peek().kind
-                ),
+                ))
+                .white()
+                .bold(),
             );
 
             None

@@ -20,7 +20,7 @@ fn main() {
 
     match command {
         Command::Run(options) | Command::Build(options) => {
-            let mut sources = SourceList::new();
+            let mut sources = SourceList::default();
             let id = sources.add_source(Source::from_path(options.path).unwrap());
 
             let mut parser = Parser::new(sources.get_source(id).unwrap());

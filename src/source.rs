@@ -126,7 +126,7 @@ impl Span {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 /// Represents a list of source files.
 pub struct SourceList {
     /// List of source files.
@@ -136,14 +136,6 @@ pub struct SourceList {
 }
 
 impl SourceList {
-    /// Creates a new source list.
-    pub fn new() -> Self {
-        Self {
-            sources: Vec::new(),
-            source_map: HashMap::new(),
-        }
-    }
-
     /// Adds a source file to the list.
     pub fn add_source(&mut self, mut source: Source) -> SourceId {
         let path = source.path().clone();

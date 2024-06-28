@@ -105,7 +105,7 @@ impl<'src> Scanner<'src> {
                         kind: TokenKind::Garbage,
                         text: format!(
                             "unexpected character `{}` found",
-                            self.source.contents()[start..self.offset].to_string()
+                            &self.source.contents()[start..self.offset]
                         ),
                         span: Span::new(start, self.offset, self.source.id()),
                     }
@@ -197,6 +197,7 @@ impl<'src> Scanner<'src> {
         }
     }
 
+    /// Scans a character literal in the source file.
     fn scan_char(&mut self) -> Token {
         let start = self.offset;
 
