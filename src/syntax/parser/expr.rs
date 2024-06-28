@@ -2,7 +2,10 @@
 
 use crate::{
     source::Span,
-    syntax::ast::{AtomExpr, AtomKind, BinaryExpr, BinaryOp, Expr, SymbolExpr, UnaryExpr, UnaryOp},
+    syntax::ast::{
+        AtomExpr, AtomKind, BinaryExpr, BinaryOp, Expr, LiteralExpr, LiteralKind, SliceLiteral,
+        SymbolExpr, UnaryExpr, UnaryOp,
+    },
     token::TokenKind,
 };
 
@@ -209,7 +212,7 @@ impl Parser<'_> {
     /// Parses an atom, symbol or a literal expression.
     fn parse_expr_operand(&mut self) -> Option<Expr> {
         match self.peek().kind {
-            TokenKind::Dot => self.parse_expr_literal(),
+            TokenKind::Dot | TokenKind::LBracket => self.parse_expr_literal(),
             TokenKind::Symbol => self.parse_expr_symbol(),
 
             // If the token is not a symbol or a dot, parse an atom expression.
@@ -219,7 +222,63 @@ impl Parser<'_> {
 
     /// Parses a literal expression.
     fn parse_expr_literal(&mut self) -> Option<Expr> {
-        todo!("parse_expr_literal")
+        match self.peek().kind {
+            TokenKind::LBracket => self.parse_expr_literal_slice(),
+            TokenKind::Dot => self.parse_expr_literal_struct_or_enum(),
+
+            _ => unreachable!("this point should not be reached, since this method should only be called if we can parse a literal expression")
+        }
+    }
+
+    /// Parses a slice literal expression.
+    fn parse_expr_literal_slice(&mut self) -> Option<Expr> {
+        // Consume the left bracket.
+        let left_bracket_token = self.consume();
+
+        // Parse the slice elements.
+        let elements = self.parse_expr_literal_slice_elements()?;
+
+        // Consume the right bracket.
+        let Some(right_bracket_token) = self.expect(TokenKind::RBracket) else {
+            return None;
+        };
+
+        // Create the slice literal expression.
+        let span = Span::new(
+            left_bracket_token.span.start,
+            right_bracket_token.span.end,
+            self.source.id(),
+        );
+        Some(Expr::Literal(LiteralExpr {
+            kind: LiteralKind::Slice(SliceLiteral { elements }),
+            span,
+        }))
+    }
+
+    /// Parses the elements of a slice literal expression.
+    fn parse_expr_literal_slice_elements(&mut self) -> Option<Box<[Expr]>> {
+        let mut elements = Vec::new();
+
+        // Parse the first element.
+        if let Some(element) = self.parse_expr() {
+            elements.push(element);
+        }
+
+        // Parse the remaining elements.
+        while self.peek().kind == TokenKind::Comma {
+            // Consume the comma.
+            self.consume();
+
+            // Parse the next element.
+            elements.push(self.parse_expr()?);
+        }
+
+        Some(elements.into())
+    }
+
+    /// Parses a struct or enum literal expression.
+    fn parse_expr_literal_struct_or_enum(&mut self) -> Option<Expr> {
+        todo!()
     }
 
     /// Parses an atom expression.

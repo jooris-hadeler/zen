@@ -70,8 +70,6 @@ pub struct LiteralExpr {
 pub enum LiteralKind {
     /// An enum literal, e.g. `.State::Loading`.
     Enum(EnumLiteral),
-    /// A tuple literal, e.g. `(1, 2, 3)`.
-    Tuple(TupleLiteral),
     /// A slice literal, e.g. `[1, 2, 3]`.
     Slice(SliceLiteral),
     /// A struct literal, e.g. `.Point { x: 32, y: 44 }`.
@@ -85,15 +83,10 @@ pub struct EnumLiteral {
 }
 
 #[derive(Debug, PartialEq)]
-/// Represents a tuple literal in the `zen` language.
-pub struct TupleLiteral {
-    // TODO: Implement the `TupleLiteral` struct.
-}
-
-#[derive(Debug, PartialEq)]
 /// Represents a slice literal in the `zen` language.
 pub struct SliceLiteral {
-    // TODO: Implement the `SliceLiteral` struct.
+    /// The elements of the slice literal.
+    pub elements: Box<[Expr]>,
 }
 
 #[derive(Debug, PartialEq)]
