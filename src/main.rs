@@ -4,14 +4,15 @@
 #![deny(clippy::missing_docs_in_private_items)]
 #![deny(missing_docs)]
 
-use clap::Parser;
+use clap::Parser as ClapParser;
 use cli::Command;
-use scanner::Scanner;
 use source::{Source, SourceList};
+use syntax::parser::Parser;
 
 pub mod cli;
 pub mod scanner;
 pub mod source;
+pub mod syntax;
 pub mod token;
 
 fn main() {
@@ -22,15 +23,10 @@ fn main() {
             let mut sources = SourceList::new();
             let id = sources.add_source(Source::from_path(options.path).unwrap());
 
-            let scanner = Scanner::new(sources.get_source(id).unwrap());
+            let mut parser = Parser::new(sources.get_source(id).unwrap());
 
-            let tokens = scanner.collect();
-
-            if let Some(tokens) = tokens {
-                for token in tokens {
-                    println!("{:?}", token);
-                }
-            }
+            let expr = parser.parse_expr();
+            println!("{expr:#?}");
         }
     }
 }

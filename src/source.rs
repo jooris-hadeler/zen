@@ -85,7 +85,7 @@ impl Source {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 /// Identifier for a source file. Used to retrieve the source file from the source map.
 pub struct SourceId(pub usize);
 
@@ -104,7 +104,7 @@ impl Debug for SourceId {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 /// Represents a span in the source file.
 pub struct Span {
     /// The start offset of the span.

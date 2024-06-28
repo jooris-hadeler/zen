@@ -26,6 +26,8 @@ pub enum TokenKind {
     String,
     /// Represents a boolean literal.
     Boolean,
+    /// Represents a character literal.
+    Char,
 
     /// Represents the `let` keyword.
     Let,
@@ -100,6 +102,8 @@ pub enum TokenKind {
     Or,
     /// Represents the `!` operator.
     Bang,
+    /// Represents the `?` operator.
+    Question,
     /// Represents the `=` operator.
     Assign,
 
@@ -127,4 +131,10 @@ pub enum TokenKind {
     Arrow,
     /// Represents the `=>` token.
     FatArrow,
+
+    /// Represents garbage text.
+    Garbage,
+
+    /// Represents the end of the file.
+    Eof,
 }
