@@ -150,14 +150,38 @@ pub enum BinaryOp {
     Multiply,
     /// Represents the division operator, e.g. `1 / 2`.
     Divide,
+    /// Represents the modulo operator, e.g. `1 % 2`.
+    Modulo,
+
+    /// Represents the bitwise and operator, e.g. `1 & 2`.
+    BitwiseAnd,
+    /// Represents the bitwise or operator, e.g. `1 | 2`.
+    BitwiseOr,
+    /// Represents the bitwise xor operator, e.g. `1 ^ 2`.
+    BitwiseXor,
+
+    /// Represents the logical and operator, e.g. `true && false`.
+    LogicalAnd,
+    /// Represents the logical or operator, e.g. `true || false`.
+    LogicalOr,
 
     /// Represents the equality operator, e.g. `a == b`.
     Equal,
     /// Represents the inequality operator, e.g. `a != b`.
     Unequal,
+    /// Represents the less than operator, e.g. `a < b`.
+    LessThan,
+    /// Represents the less than or equal operator, e.g. `a <= b`.
+    LessEqual,
+    /// Represents the greater than operator, e.g. `a > b`.
+    GreaterThan,
+    /// Represents the greater than or equal operator, e.g. `a >= b`.
+    GreaterEqual,
 
     /// Represents the assignment operator, e.g. `a = b`.
     Assign,
+    /// Represents the member access operator, e.g. `a.b`.
+    Member,
 }
 
 #[derive(Debug, PartialEq)]

@@ -84,6 +84,9 @@ pub enum TokenKind {
     Amper,
     /// Represents the `|` operator.
     Pipe,
+    /// Represents the `^` operator.
+    Caret,
+
     /// Represents the `==` operator.
     Equals,
     /// Represents the `!=` operator.
@@ -96,6 +99,7 @@ pub enum TokenKind {
     Greater,
     /// Represents the `>=` operator.
     GreaterEquals,
+
     /// Represents the `&&` operator.
     And,
     /// Represents the `||` operator.

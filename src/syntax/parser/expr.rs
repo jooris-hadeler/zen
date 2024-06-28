@@ -113,8 +113,7 @@ impl Parser<'_> {
     /// Returns the binding power of a given prefix operator.
     fn get_prefix_binding_power(&self, op: UnaryOp) -> u8 {
         match op {
-            UnaryOp::Negate => 12,
-            UnaryOp::Not => 10,
+            UnaryOp::Negate | UnaryOp::Not => 27,
 
             // If the operator is not a prefix operator, panic.
             _ => unreachable!("this point should not be reached, since this method should only be called if we have a valid prefix operator!")
@@ -124,7 +123,7 @@ impl Parser<'_> {
     /// Returns the binding power of a given postfix operator.
     fn get_postfix_binding_power(&self, op: UnaryOp) -> u8 {
         match op {
-            UnaryOp::CheckValue => 14,
+            UnaryOp::CheckValue => 30,
 
             // If the operator is not a postfix operator, panic.
             _ => unreachable!("this point should not be reached, since this method should only be called if we have a valid postfix operator!")
@@ -132,12 +131,20 @@ impl Parser<'_> {
     }
 
     /// Returns the binding power of the given binary operator.
+    /// If the left binding power is lower than the right binding power, then the operator is left-associative.
     fn get_infix_binding_power(&self, op: BinaryOp) -> (u8, u8) {
         match op {
-            BinaryOp::Assign => (1, 2),
-            BinaryOp::Equal | BinaryOp::Unequal => (3, 4),
-            BinaryOp::Add | BinaryOp::Subtract => (5, 6),
-            BinaryOp::Multiply | BinaryOp::Divide => (7, 8),
+            BinaryOp::Assign => (3, 4),
+            BinaryOp::LogicalOr => (5, 6),
+            BinaryOp::LogicalAnd => (7, 8),
+            BinaryOp::BitwiseOr => (9, 10),
+            BinaryOp::BitwiseXor => (11, 12),
+            BinaryOp::BitwiseAnd => (13, 14),
+            BinaryOp::Equal | BinaryOp::Unequal => (15, 16),
+            BinaryOp::LessThan | BinaryOp::LessEqual | BinaryOp::GreaterThan | BinaryOp::GreaterEqual => (17, 18),
+            BinaryOp::Add | BinaryOp::Subtract => (19, 20),
+            BinaryOp::Multiply | BinaryOp::Divide | BinaryOp::Modulo => (21, 22),
+            BinaryOp::Member => (27, 28),
 
             // If the operator is not an infix operator, panic.
             _ => unreachable!("this point should not be reached, since this method should only be called if we have a valid infix operator!")
@@ -160,13 +167,28 @@ impl Parser<'_> {
     /// Returns `Some(op)` if the peeked token is an infix operator, `None` otherwise.
     fn try_parse_infix_op(&mut self) -> Option<BinaryOp> {
         Some(match self.peek().kind {
-            TokenKind::Assign => BinaryOp::Assign,
-            TokenKind::Equals => BinaryOp::Equal,
-            TokenKind::NotEquals => BinaryOp::Unequal,
             TokenKind::Plus => BinaryOp::Add,
             TokenKind::Minus => BinaryOp::Subtract,
             TokenKind::Star => BinaryOp::Multiply,
             TokenKind::Slash => BinaryOp::Divide,
+            TokenKind::Percent => BinaryOp::Modulo,
+
+            TokenKind::Amper => BinaryOp::BitwiseAnd,
+            TokenKind::Pipe => BinaryOp::BitwiseOr,
+            TokenKind::Caret => BinaryOp::BitwiseXor,
+
+            TokenKind::And => BinaryOp::LogicalAnd,
+            TokenKind::Or => BinaryOp::LogicalOr,
+
+            TokenKind::Assign => BinaryOp::Assign,
+            TokenKind::Dot => BinaryOp::Member,
+
+            TokenKind::Equals => BinaryOp::Equal,
+            TokenKind::NotEquals => BinaryOp::Unequal,
+            TokenKind::Less => BinaryOp::LessThan,
+            TokenKind::LessEquals => BinaryOp::LessEqual,
+            TokenKind::Greater => BinaryOp::GreaterThan,
+            TokenKind::GreaterEquals => BinaryOp::GreaterEqual,
 
             // If the peeked token is not an infix operator, return `None`.
             _ => return None,

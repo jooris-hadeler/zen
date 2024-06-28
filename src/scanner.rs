@@ -87,7 +87,7 @@ impl<'src> Scanner<'src> {
             Some(c) => match c {
                 '0'..='9' => self.scan_number(),
                 'a'..='z' | 'A'..='Z' | '_' => self.scan_symbol_or_keyword(),
-                '+' | '*' | '/' | '%' | '?' => self.scan_single_char_operator(),
+                '+' | '*' | '/' | '%' | '?' | '^' => self.scan_single_char_operator(),
                 '|' | '&' => self.scan_double_char_operator(),
                 '-' => self.scan_minus_or_arrow(),
                 '=' => self.scan_equals_assign_or_fat_arrow(),
@@ -336,6 +336,7 @@ impl<'src> Scanner<'src> {
             '/' => TokenKind::Slash,
             '%' => TokenKind::Percent,
             '?' => TokenKind::Question,
+            '^' => TokenKind::Caret,
             _ => unreachable!(),
         };
 
