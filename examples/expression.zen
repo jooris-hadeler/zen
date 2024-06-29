@@ -1,2 +1,3 @@
-.State::Downloading {
+.Command::SetVolume {
+    volume: 0.75
 }

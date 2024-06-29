@@ -33,6 +33,24 @@ impl<'src> Parser<'src> {
         }
     }
 
+    /// Prints an error message for the given token.
+    fn error(&self, token: Token, message: &str) {
+        let (line, column) = self.source.source_position(token.span.start);
+
+        eprintln!(
+            "{} {} {}",
+            style(format!(
+                "{}:{}:{}:",
+                self.source.path().display(),
+                line,
+                column
+            ))
+            .cyan(),
+            style("error:").red().bold(),
+            style(message).white()
+        );
+    }
+
     /// Consumes the current token and returns it.
     fn consume(&mut self) -> Token {
         // If we haven't started parsing yet, advance to the first token.
@@ -53,26 +71,9 @@ impl<'src> Parser<'src> {
         if self.peek().kind == kind {
             Some(self.consume())
         } else {
-            let (line, column) = self.source.source_position(self.peek().span.start);
-
-            eprintln!(
-                "{} {} {}",
-                style(format!(
-                    "{}:{}:{}:",
-                    self.source.path().display(),
-                    line,
-                    column
-                ))
-                .cyan(),
-                style("error:").red().bold(),
-                style(format!(
-                    "expected token of kind {:?}, found {:?}",
-                    kind,
-                    self.peek().kind
-                ))
-                .white()
-                .bold(),
-            );
+            let token = self.peek().clone();
+            let message = format!("expected '{}', found '{}'", kind, token.kind);
+            self.error(token, message.as_str());
 
             None
         }

@@ -289,7 +289,11 @@ impl Parser<'_> {
         match self.peek().kind {
             TokenKind::LBrace => self.parse_expr_literal_struct(symbol_name, dot_token.span),
             TokenKind::DoubleColon => self.parse_expr_literal_enum(symbol_name, dot_token.span),
-            _ => None,
+            _ => {
+                let token = self.peek().clone();
+                self.error(token, "expected '{' or '::' after struct or enum name");
+                return None;
+            }
         }
     }
 
