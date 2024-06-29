@@ -3,8 +3,8 @@
 use crate::{
     source::Span,
     syntax::ast::{
-        AtomExpr, AtomKind, BinaryExpr, BinaryOp, EnumLiteral, Expr, LiteralExpr, LiteralKind,
-        SliceLiteral, StructField, StructLiteral, SymbolExpr, UnaryExpr, UnaryOp,
+        AtomExpr, AtomKind, BinaryExpr, BinaryOp, CallExpr, EnumLiteral, Expr, LiteralExpr,
+        LiteralKind, SliceLiteral, StructField, StructLiteral, SymbolExpr, UnaryExpr, UnaryOp,
     },
     token::TokenKind,
 };
@@ -74,6 +74,21 @@ impl Parser<'_> {
                     operand: Box::new(lhs),
                     span,
                 });
+
+                continue;
+            }
+
+            // Parse a function call, if the next token is a left parenthesis.
+            if self.peek().kind == TokenKind::LParen {
+                /// The binding power of the call operator.
+                const EXPR_CALL_BINDING_POWER: u8 = 27;
+
+                if EXPR_CALL_BINDING_POWER < min_binding_power {
+                    break;
+                }
+
+                // Parse the function call, with the lhs being the function.
+                lhs = self.parse_expr_call(lhs)?;
 
                 continue;
             }
@@ -208,6 +223,45 @@ impl Parser<'_> {
         })
     }
 
+    /// Parses a function call expression.
+    fn parse_expr_call(&mut self, func: Expr) -> Option<Expr> {
+        // Skip the left parenthesis.
+        self.consume();
+
+        // Parse the arguments of the function call.
+        let arguments = self.parse_expr_call_args()?;
+
+        // Skip the right parenthesis.
+        let right_paren = self.expect(TokenKind::RParen)?;
+
+        // Create the function call expression.
+        let span = Span::new(func.span().start, right_paren.span.end, self.source.id());
+        Some(Expr::Call(CallExpr {
+            function: Box::new(func),
+            arguments,
+            span,
+        }))
+    }
+
+    /// Parses the comma-separated arguments of a function call.
+    fn parse_expr_call_args(&mut self) -> Option<Box<[Expr]>> {
+        let mut arguments = Vec::new();
+
+        if self.peek().kind != TokenKind::RParen {
+            arguments.push(self.parse_expr()?);
+        }
+
+        while self.peek().kind == TokenKind::Comma {
+            // Consume the comma.
+            self.consume();
+
+            // Parse the next argument.
+            arguments.push(self.parse_expr()?);
+        }
+
+        Some(arguments.into_boxed_slice())
+    }
+
     /// Parses an atom, symbol or a literal expression.
     fn parse_expr_operand(&mut self) -> Option<Expr> {
         match self.peek().kind {
@@ -257,8 +311,8 @@ impl Parser<'_> {
         let mut elements = Vec::new();
 
         // Parse the first element.
-        if let Some(element) = self.parse_expr() {
-            elements.push(element);
+        if self.peek().kind != TokenKind::RBracket {
+            elements.push(self.parse_expr()?);
         }
 
         // Parse the remaining elements.
@@ -399,7 +453,15 @@ impl Parser<'_> {
             TokenKind::Float => self.parse_expr_atom_float(),
             TokenKind::Char => self.parse_expr_atom_char(),
 
-            _ => None,
+            _ => {
+                let token = self.peek().clone();
+                let message = format!(
+                    "expected 'INT', 'BOOLEAN', 'STRING', 'FLOAT' OR 'CHAR', found '{}'",
+                    token.kind
+                );
+                self.error(token, message.as_str());
+                None
+            }
         }
     }
 

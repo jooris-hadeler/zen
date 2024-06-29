@@ -15,6 +15,8 @@ pub enum Expr {
     Binary(BinaryExpr),
     /// A symbol expression, e.g. `x`, `y` or `z`.
     Symbol(SymbolExpr),
+    /// A call expression, e.g. `foo()`, `bar(1, 2, 3)` or `baz(x, y, z)`.
+    Call(CallExpr),
 }
 
 impl Expr {
@@ -26,6 +28,7 @@ impl Expr {
             Expr::Unary(expr) => expr.span,
             Expr::Binary(expr) => expr.span,
             Expr::Symbol(expr) => expr.span,
+            Expr::Call(expr) => expr.span,
         }
     }
 }
@@ -202,5 +205,16 @@ pub struct SymbolExpr {
     /// The name of the symbol.
     pub name: Box<str>,
     /// The span of the symbol expression in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a call expression in the `zen` language.
+pub struct CallExpr {
+    /// The function being called.
+    pub function: Box<Expr>,
+    /// The arguments of the call expression.
+    pub arguments: Box<[Expr]>,
+    /// The span of the call expression in the source code.
     pub span: Span,
 }
