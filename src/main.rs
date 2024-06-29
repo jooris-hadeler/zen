@@ -25,8 +25,8 @@ fn main() {
 
             let mut parser = Parser::new(sources.get_source(id).unwrap());
 
-            let expr = parser.parse_expr();
-            println!("{expr:#?}");
+            let typ = parser.parse_type();
+            println!("{typ:#?}");
         }
     }
 }

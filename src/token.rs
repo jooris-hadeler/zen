@@ -31,46 +31,73 @@ pub enum TokenKind {
     /// Represents a character literal.
     Char,
 
+    /// Represents the `i8` type.
+    TyI8,
+    /// Represents the `i16` type.
+    TyI16,
+    /// Represents the `i32` type.
+    TyI32,
+    /// Represents the `i64` type.
+    TyI64,
+    /// Represents the `u8` type.
+    TyU8,
+    /// Represents the `u16` type.
+    TyU16,
+    /// Represents the `u32` type.
+    TyU32,
+    /// Represents the `u64` type.
+    TyU64,
+    /// Represents the `f32` type.
+    TyF32,
+    /// Represents the `f64` type.
+    TyF64,
+    /// Represents the `bool` type.
+    TyBool,
+    /// Represents the `char` type.
+    TyChar,
+    /// Represents the `str` type.
+    TyStr,
+
     /// Represents the `let` keyword.
-    Let,
+    KwLet,
     /// Represents the `mut` keyword.
-    Mut,
+    KwMut,
     /// Represents the `fn` keyword.
-    Fn,
+    KwFn,
     /// Represents the `if` keyword.
-    If,
+    KwIf,
     /// Represents the `else` keyword.
-    Else,
+    KwElse,
     /// Represents the `while` keyword.
-    While,
+    KwWhile,
     /// Represents the `for` keyword.
-    For,
+    KwFor,
     /// Represents the `in` keyword.
-    In,
+    KwIn,
     /// Represents the `return` keyword.
-    Return,
+    KwReturn,
     /// Represents the `break` keyword.
-    Break,
+    KwBreak,
     /// Represents the `continue` keyword.
-    Continue,
+    KwContinue,
     /// Represents the `extern` keyword.
-    Extern,
+    KwExtern,
     /// Represents the `const` keyword.
-    Const,
+    KwConst,
     /// Represents the `struct` keyword.
-    Struct,
+    KwStruct,
     /// Represents the `enum` keyword.
-    Enum,
+    KwEnum,
     /// Represents the `type` keyword.
-    Type,
+    KwType,
     /// Represents the `import` keyword.
-    Import,
+    KwImport,
     /// Represents the `from` keyword.
-    From,
+    KwFrom,
     /// Represents the `as` keyword.
-    As,
+    KwAs,
     /// Represents the `self` keyword.
-    Self_,
+    KwSelf,
 
     /// Represents the `+` operator.
     Plus,
@@ -153,32 +180,48 @@ impl Display for TokenKind {
             f,
             "{}",
             match self {
-                TokenKind::Symbol => "SYMBOL",
-                TokenKind::Integer => "INTEGER",
-                TokenKind::Float => "FLOAT",
-                TokenKind::String => "STRING",
-                TokenKind::Boolean => "BOOLEAN",
-                TokenKind::Char => "CHAR",
-                TokenKind::Let => "let",
-                TokenKind::Mut => "mut",
-                TokenKind::Fn => "fn",
-                TokenKind::If => "if",
-                TokenKind::Else => "else",
-                TokenKind::While => "while",
-                TokenKind::For => "for",
-                TokenKind::In => "in",
-                TokenKind::Return => "return",
-                TokenKind::Break => "break",
-                TokenKind::Continue => "continue",
-                TokenKind::Extern => "extern",
-                TokenKind::Const => "const",
-                TokenKind::Struct => "struct",
-                TokenKind::Enum => "enum",
-                TokenKind::Type => "type",
-                TokenKind::Import => "import",
-                TokenKind::From => "from",
-                TokenKind::As => "as",
-                TokenKind::Self_ => "self",
+                TokenKind::Symbol => "<SYMBOL>",
+                TokenKind::Integer => "<INTEGER>",
+                TokenKind::Float => "<FLOAT>",
+                TokenKind::String => "<STRING>",
+                TokenKind::Boolean => "<BOOLEAN>",
+                TokenKind::Char => "<CHAR>",
+
+                TokenKind::TyI8 => "i8",
+                TokenKind::TyI16 => "i16",
+                TokenKind::TyI32 => "i32",
+                TokenKind::TyI64 => "i64",
+                TokenKind::TyU8 => "u8",
+                TokenKind::TyU16 => "u16",
+                TokenKind::TyU32 => "u32",
+                TokenKind::TyU64 => "u64",
+                TokenKind::TyF32 => "f32",
+                TokenKind::TyF64 => "f64",
+                TokenKind::TyBool => "bool",
+                TokenKind::TyChar => "char",
+                TokenKind::TyStr => "str",
+
+                TokenKind::KwLet => "let",
+                TokenKind::KwMut => "mut",
+                TokenKind::KwFn => "fn",
+                TokenKind::KwIf => "if",
+                TokenKind::KwElse => "else",
+                TokenKind::KwWhile => "while",
+                TokenKind::KwFor => "for",
+                TokenKind::KwIn => "in",
+                TokenKind::KwReturn => "return",
+                TokenKind::KwBreak => "break",
+                TokenKind::KwContinue => "continue",
+                TokenKind::KwExtern => "extern",
+                TokenKind::KwConst => "const",
+                TokenKind::KwStruct => "struct",
+                TokenKind::KwEnum => "enum",
+                TokenKind::KwType => "type",
+                TokenKind::KwImport => "import",
+                TokenKind::KwFrom => "from",
+                TokenKind::KwAs => "as",
+                TokenKind::KwSelf => "self",
+
                 TokenKind::Plus => "+",
                 TokenKind::Minus => "-",
                 TokenKind::Star => "*",
@@ -211,8 +254,9 @@ impl Display for TokenKind {
                 TokenKind::Comma => ",",
                 TokenKind::Arrow => "->",
                 TokenKind::FatArrow => "=>",
-                TokenKind::Garbage => "GARBAGE",
-                TokenKind::Eof => "EOF",
+
+                TokenKind::Garbage => "<GARBAGE>",
+                TokenKind::Eof => "<EOF>",
             }
         )
     }

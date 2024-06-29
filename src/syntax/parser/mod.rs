@@ -9,6 +9,7 @@ use crate::{
 };
 
 pub mod expr;
+pub mod r#type;
 
 /// The parser for the `zen` language.
 pub struct Parser<'src> {
