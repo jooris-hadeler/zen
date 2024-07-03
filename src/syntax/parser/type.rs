@@ -3,7 +3,10 @@
 use crate::{
     source::Span,
     syntax::{
-        ast::{ArrayType, PointerType, PrimitiveKind, PrimitiveType, ReferenceType, Type},
+        ast::{
+            ArrayType, GenericParameter, GenericParameterList, NamedType, PointerType,
+            PrimitiveKind, PrimitiveType, ReferenceType, SliceType, Type,
+        },
         parser::Parser,
     },
     token::TokenKind,
@@ -13,22 +16,128 @@ impl Parser<'_> {
     /// Parses a type.
     pub fn parse_type(&mut self) -> Option<Type> {
         match self.peek().kind {
+            TokenKind::LBracket => self.parse_type_array_or_slice(),
             TokenKind::Amper => self.parse_type_reference(),
             TokenKind::Star => self.parse_type_pointer(),
-            TokenKind::LBracket => self.parse_type_array(),
+            TokenKind::Symbol => self.parse_type_named(),
 
             _ => self.parse_type_primitive(),
         }
     }
 
-    /// Parses an array type.
-    fn parse_type_array(&mut self) -> Option<Type> {
+    /// Parses a generic parameter list.
+    fn parse_type_generics(&mut self) -> Option<GenericParameterList> {
+        // Consume the `[`.
+        let left_bracket_token = self.expect(TokenKind::LBracket)?;
+        let mut span = left_bracket_token.span;
+
+        let mut generics = Vec::new();
+
+        // Parse the first generic parameter.
+        generics.push(self.parse_type_generic_parameter()?);
+
+        // Parse the rest of the generic parameters.
+        while self.peek().kind == TokenKind::Comma {
+            // Consume the `,`.
+            self.consume();
+
+            // Parse the generic parameter.
+            generics.push(self.parse_type_generic_parameter()?);
+        }
+
+        // Consume the `]`.
+        let right_bracket_token = self.expect(TokenKind::RBracket)?;
+        span.end = right_bracket_token.span.end;
+
+        // Create the generic parameter list.
+        Some(GenericParameterList {
+            params: generics.into(),
+            span,
+        })
+    }
+
+    /// Parses a generic parameter.
+    fn parse_type_generic_parameter(&mut self) -> Option<GenericParameter> {
+        // Consume the symbol.
+        let ty = self.parse_type()?;
+
+        // Create the generic parameter.
+        let span = ty.span();
+        Some(GenericParameter {
+            ty: Box::new(ty),
+            span,
+        })
+    }
+
+    /// Parses the path of a type.
+    fn parse_type_path(&mut self) -> Option<(Box<[Box<str>]>, Span)> {
+        let mut path = Vec::new();
+
+        // Consume the first symbol.
+        let symbol_token = self.expect(TokenKind::Symbol)?;
+        let mut span = symbol_token.span;
+        path.push(symbol_token.text.into());
+
+        while self.peek().kind == TokenKind::Dot {
+            // Consume the '.'.
+            self.consume();
+
+            // Parse the symbol.
+            let symbol_token = self.expect(TokenKind::Symbol)?;
+            span.end = symbol_token.span.end;
+            path.push(symbol_token.text.into());
+        }
+
+        Some((path.into(), span))
+    }
+
+    /// Parses a named type.
+    fn parse_type_named(&mut self) -> Option<Type> {
+        let (path, span) = self.parse_type_path()?;
+
+        let generics = if self.peek().kind == TokenKind::LBracket {
+            Some(self.parse_type_generics()?)
+        } else {
+            None
+        };
+
+        Some(Type::Named(NamedType {
+            path,
+            generics,
+            span,
+        }))
+    }
+
+    /// Parses an array or slice type.
+    fn parse_type_array_or_slice(&mut self) -> Option<Type> {
         // Consume the '['.
         let lbracket_token = self.consume();
 
         // Parse the type.
         let ty = self.parse_type()?;
 
+        if self.peek().kind == TokenKind::Semicolon {
+            self.parse_type_array(ty, lbracket_token.span)
+        } else {
+            self.parse_type_slice(ty, lbracket_token.span)
+        }
+    }
+
+    /// Completes the parsing of a slice type.
+    fn parse_type_slice(&mut self, ty: Type, mut span: Span) -> Option<Type> {
+        // Consume the ']'.
+        let rbracket_token = self.expect(TokenKind::RBracket)?;
+
+        // Create the slice type.
+        span.end = rbracket_token.span.end;
+        Some(Type::Slice(SliceType {
+            ty: Box::new(ty),
+            span,
+        }))
+    }
+
+    /// Completes the parsing of an array type.
+    fn parse_type_array(&mut self, ty: Type, mut span: Span) -> Option<Type> {
         // Consume the ';'.
         self.expect(TokenKind::Semicolon)?;
 
@@ -40,11 +149,7 @@ impl Parser<'_> {
         let rbracket_token = self.expect(TokenKind::RBracket)?;
 
         // Create the slice type.
-        let span = Span::new(
-            lbracket_token.span.start,
-            rbracket_token.span.end,
-            self.source.id(),
-        );
+        span.end = rbracket_token.span.end;
         Some(Type::Array(ArrayType {
             ty: Box::new(ty),
             size,

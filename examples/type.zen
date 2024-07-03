@@ -1,1 +1,1 @@
-[i32; 5]
+&mut [foo.bar.Baz[i32]]

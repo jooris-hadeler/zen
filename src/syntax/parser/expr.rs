@@ -346,7 +346,7 @@ impl Parser<'_> {
             _ => {
                 let token = self.peek().clone();
                 self.error(token, "expected '{' or '::' after struct or enum name");
-                return None;
+                None
             }
         }
     }

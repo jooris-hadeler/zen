@@ -11,8 +11,12 @@ pub enum Type {
     Reference(ReferenceType),
     /// A pointer type, e.g. `*i32`, `*mut str` or `*T`.
     Pointer(PointerType),
-    /// An array type, e.g. `[i32]`, `[str]` or `[T]`.
+    /// An array type, e.g. `[i32; 5]`, `[str; 2]` or `[T; 32]`.
     Array(ArrayType),
+    /// A slice type, e.g. `[i32]`, `[str]` or `[T]`.
+    Slice(SliceType),
+    /// A named type, e.g. `Foo`, `Bar` or `foo.Baz`.
+    Named(NamedType),
 }
 
 impl Type {
@@ -23,6 +27,8 @@ impl Type {
             Type::Reference(ty) => ty.span,
             Type::Pointer(ty) => ty.span,
             Type::Array(ty) => ty.span,
+            Type::Slice(ty) => ty.span,
+            Type::Named(ty) => ty.span,
         }
     }
 }
@@ -97,5 +103,43 @@ pub struct ArrayType {
     /// The size of the array.
     pub size: usize,
     /// The span of the array type in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a slice type in the `zen` language.
+pub struct SliceType {
+    /// The type of the elements in the slice.
+    pub ty: Box<Type>,
+    /// The span of the slice type in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a named type in the `zen` language.
+pub struct NamedType {
+    /// The path of the named type.
+    pub path: Box<[Box<str>]>,
+    /// The generic parameters of this type.
+    pub generics: Option<GenericParameterList>,
+    /// The span of the named type in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a list of generic parameters in the `zen` language.
+pub struct GenericParameterList {
+    /// The generic parameters of the type.
+    pub params: Box<[GenericParameter]>,
+    /// The span of the generic parameter list in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a generic parameter in the `zen` language.
+pub struct GenericParameter {
+    /// The name of the generic parameter.
+    pub ty: Box<Type>,
+    /// The span of the generic parameter in the source code.
     pub span: Span,
 }
