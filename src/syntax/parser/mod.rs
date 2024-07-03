@@ -8,6 +8,7 @@ use crate::{
     token::{Token, TokenKind},
 };
 
+pub mod decl;
 pub mod expr;
 pub mod r#type;
 
