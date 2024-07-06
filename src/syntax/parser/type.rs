@@ -5,7 +5,8 @@ use crate::{
     syntax::{
         ast::{
             ArrayType, GenericParameter, GenericParameterList, NamedType, PointerType,
-            PrimitiveKind, PrimitiveType, ReferenceType, SliceType, Type,
+            PrimitiveKind, PrimitiveType, ReferenceType, SliceType, StructField, StructTypeDef,
+            Type, TypeDef,
         },
         parser::Parser,
     },
@@ -13,6 +14,73 @@ use crate::{
 };
 
 impl Parser<'_> {
+    /// Parses a struct type definition.
+    pub fn parse_typedef_struct(&mut self) -> Option<TypeDef> {
+        let struct_token = self.expect(TokenKind::KwStruct)?;
+        let mut span = struct_token.span;
+
+        // Parse the name of the struct.
+        let name_token = self.expect(TokenKind::Symbol)?;
+
+        // Consume the '{'.
+        self.expect(TokenKind::LBrace)?;
+
+        // Parse the fields of the struct.
+        let fields = self.parse_typedef_struct_fields()?;
+
+        // Consume the '}'.
+        let rbrace_token = self.expect(TokenKind::RBrace)?;
+        span.end = rbrace_token.span.end;
+
+        // Create the struct type definition.
+        Some(TypeDef::Struct(StructTypeDef {
+            name: name_token.text.into(),
+            fields,
+            span,
+        }))
+    }
+
+    /// Parses the fields of a struct type definition.
+    fn parse_typedef_struct_fields(&mut self) -> Option<Box<[StructField]>> {
+        let mut fields = Vec::new();
+
+        if self.peek().kind == TokenKind::Symbol {
+            // Parse the first field.
+            fields.push(self.parse_typedef_struct_field()?);
+
+            // Parse the rest of the fields.
+            while self.peek().kind == TokenKind::Comma {
+                // Consume the ','.
+                self.consume();
+
+                // Parse the field.
+                fields.push(self.parse_typedef_struct_field()?);
+            }
+        }
+
+        Some(fields.into_boxed_slice())
+    }
+
+    /// Parses a field in a struct type definition.
+    fn parse_typedef_struct_field(&mut self) -> Option<StructField> {
+        // Parse the name of the field.
+        let name_token = self.expect(TokenKind::Symbol)?;
+
+        // Consume the ':'.
+        self.expect(TokenKind::Colon)?;
+
+        // Parse the type of the field.
+        let ty = self.parse_type()?;
+
+        // Create the struct field.
+        let span = Span::new(name_token.span.start, ty.span().end, self.source.id());
+        Some(StructField {
+            name: name_token.text.into(),
+            ty: Box::new(ty),
+            span,
+        })
+    }
+
     /// Parses a type.
     pub fn parse_type(&mut self) -> Option<Type> {
         match self.peek().kind {

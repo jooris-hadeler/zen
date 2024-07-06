@@ -8,6 +8,8 @@ use crate::{
     token::{Token, TokenKind},
 };
 
+use super::ast::Module;
+
 pub mod decl;
 pub mod expr;
 pub mod r#type;
@@ -33,6 +35,25 @@ impl<'src> Parser<'src> {
             scanner,
             current: None,
         }
+    }
+
+    /// Parses the source file and returns the module.
+    pub fn parse_module(&mut self) -> Option<Module> {
+        let mut module = Module::default();
+
+        while self.peek().kind != TokenKind::Eof {
+            match self.peek().kind {
+                TokenKind::KwFn => module.functions.push(self.parse_function()?),
+                TokenKind::KwStruct => module.type_defs.push(self.parse_typedef_struct()?),
+
+                _ => {
+                    let token = self.peek().clone();
+                    self.error(token, "expected function or type definition");
+                }
+            }
+        }
+
+        Some(module)
     }
 
     /// Prints an error message for the given token.

@@ -5,7 +5,7 @@ use crate::{
     syntax::ast::{
         AtomExpr, AtomKind, BinaryExpr, BinaryOp, BlockExpr, BreakExpr, CallExpr, ContinueExpr,
         EnumLiteral, Expr, ForExpr, IfExpr, LetExpr, LiteralExpr, LiteralKind, ReturnExpr,
-        SliceLiteral, StructField, StructLiteral, SymbolExpr, UnaryExpr, UnaryOp, WhileExpr,
+        SliceLiteral, StructLiteral, StructLiteralField, SymbolExpr, UnaryExpr, UnaryOp, WhileExpr,
     },
     token::TokenKind,
 };
@@ -19,7 +19,7 @@ impl Parser<'_> {
     }
 
     /// Parses an expression, but allows for disallowing expressions which make no sense in let expressions.
-    pub fn parse_expr_internal(&mut self, inside_let_value: bool) -> Option<Expr> {
+    fn parse_expr_internal(&mut self, inside_let_value: bool) -> Option<Expr> {
         match self.peek().kind {
             TokenKind::KwIf => self.parse_expr_if(),
             TokenKind::KwWhile => self.parse_expr_while(),
@@ -556,7 +556,7 @@ impl Parser<'_> {
     }
 
     /// Parses a comma-separated list of struct fields.
-    fn parse_expr_literal_struct_fields(&mut self) -> Option<Box<[StructField]>> {
+    fn parse_expr_literal_struct_fields(&mut self) -> Option<Box<[StructLiteralField]>> {
         let mut fields = Vec::new();
 
         // Try parsing the first field.
@@ -577,7 +577,7 @@ impl Parser<'_> {
     }
 
     /// Parses a struct field.
-    fn parse_expr_literal_struct_field(&mut self) -> Option<StructField> {
+    fn parse_expr_literal_struct_field(&mut self) -> Option<StructLiteralField> {
         // Parse the field name.
         let name = self.expect(TokenKind::Symbol)?;
 
@@ -588,7 +588,7 @@ impl Parser<'_> {
         let value = self.parse_expr()?;
         let span = Span::new(name.span.start, value.span().end, self.source.id());
 
-        Some(StructField {
+        Some(StructLiteralField {
             name: name.text.into(),
             value,
             span,

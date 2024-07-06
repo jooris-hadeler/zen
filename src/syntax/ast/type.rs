@@ -143,3 +143,32 @@ pub struct GenericParameter {
     /// The span of the generic parameter in the source code.
     pub span: Span,
 }
+
+#[derive(Debug, PartialEq)]
+/// Represents a type definition in the `zen` language.
+pub enum TypeDef {
+    /// Represents a struct type definition.
+    Struct(StructTypeDef),
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a struct type definition in the `zen` language.
+pub struct StructTypeDef {
+    /// The name of the struct.
+    pub name: Box<str>,
+    /// The fields of the struct.
+    pub fields: Box<[StructField]>,
+    /// The span of the struct type in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a field in a struct type definition.
+pub struct StructField {
+    /// The name of the field.
+    pub name: Box<str>,
+    /// The type of the field.
+    pub ty: Box<Type>,
+    /// The span of the field in the source code.
+    pub span: Span,
+}

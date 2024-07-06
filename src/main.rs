@@ -25,8 +25,8 @@ fn main() {
 
             let mut parser = Parser::new(sources.get_source(id).unwrap());
 
-            let func = parser.parse_function();
-            println!("{func:#?}");
+            let module = parser.parse_module();
+            println!("{module:#?}");
         }
     }
 }

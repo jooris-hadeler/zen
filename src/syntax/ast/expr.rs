@@ -133,7 +133,7 @@ pub struct EnumLiteral {
     /// The variant of the enum.
     pub variant: Box<str>,
     /// The body of the enum literal.
-    pub body: Option<Box<[StructField]>>,
+    pub body: Option<Box<[StructLiteralField]>>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -149,12 +149,12 @@ pub struct StructLiteral {
     /// The name of the struct.
     pub name: Box<str>,
     /// The fields of the struct literal.
-    pub fields: Box<[StructField]>,
+    pub fields: Box<[StructLiteralField]>,
 }
 
 #[derive(Debug, PartialEq)]
 /// Represents a field in a struct literal.
-pub struct StructField {
+pub struct StructLiteralField {
     /// The name of the field.
     pub name: Box<str>,
     /// The value of the field.
