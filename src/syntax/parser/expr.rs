@@ -3,9 +3,9 @@
 use crate::{
     source::Span,
     syntax::ast::{
-        AtomExpr, AtomKind, BinaryExpr, BinaryOp, BlockExpr, BreakExpr, CallExpr, EnumLiteral,
-        Expr, IfExpr, LetExpr, LiteralExpr, LiteralKind, ReturnExpr, SliceLiteral, StructField,
-        StructLiteral, SymbolExpr, UnaryExpr, UnaryOp, WhileExpr,
+        AtomExpr, AtomKind, BinaryExpr, BinaryOp, BlockExpr, BreakExpr, CallExpr, ContinueExpr,
+        EnumLiteral, Expr, IfExpr, LetExpr, LiteralExpr, LiteralKind, ReturnExpr, SliceLiteral,
+        StructField, StructLiteral, SymbolExpr, UnaryExpr, UnaryOp, WhileExpr,
     },
     token::TokenKind,
 };
@@ -24,12 +24,22 @@ impl Parser<'_> {
             TokenKind::KwIf => self.parse_expr_if(),
             TokenKind::KwWhile => self.parse_expr_while(),
 
+            // These expressions are not allowed inside the value of a let expression.
             TokenKind::KwLet if !inside_let_value => self.parse_expr_let(),
             TokenKind::KwBreak if !inside_let_value => self.parse_expr_break(),
             TokenKind::KwReturn if !inside_let_value => self.parse_expr_return(),
+            TokenKind::KwContinue if !inside_let_value => self.parse_expr_continue(),
 
             _ => self.parse_expr_arithmetic(0),
         }
+    }
+
+    /// Parses a continue expression.
+    fn parse_expr_continue(&mut self) -> Option<Expr> {
+        let continue_token = self.expect(TokenKind::KwContinue)?;
+        let span = continue_token.span;
+
+        Some(Expr::Continue(ContinueExpr { span }))
     }
 
     /// Parses a return expression.

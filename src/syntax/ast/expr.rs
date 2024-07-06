@@ -31,6 +31,8 @@ pub enum Expr {
     Break(BreakExpr),
     /// A return expression, e.g. `return 42`.
     Return(ReturnExpr),
+    /// A continue expression, e.g. `continue`.
+    Continue(ContinueExpr),
 }
 
 impl Expr {
@@ -49,6 +51,7 @@ impl Expr {
             Expr::While(expr) => expr.span,
             Expr::Break(expr) => expr.span,
             Expr::Return(expr) => expr.span,
+            Expr::Continue(expr) => expr.span,
         }
     }
 
@@ -67,6 +70,7 @@ impl Expr {
             Expr::While(_) => false,
             Expr::Break(_) => true,
             Expr::Return(_) => true,
+            Expr::Continue(_) => true,
         }
     }
 }
@@ -322,5 +326,12 @@ pub struct ReturnExpr {
     /// The optional value of the return expression.
     pub value: Option<Box<Expr>>,
     /// The span of the return expression in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a continue expression in the `zen` language.
+pub struct ContinueExpr {
+    /// The span of the continue expression in the source code.
     pub span: Span,
 }
