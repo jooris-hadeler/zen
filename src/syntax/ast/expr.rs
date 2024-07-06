@@ -2,6 +2,8 @@
 
 use crate::source::Span;
 
+use super::Block;
+
 #[derive(Debug, PartialEq)]
 /// Represents an expression in the `zen` language.
 pub enum Expr {
@@ -17,6 +19,10 @@ pub enum Expr {
     Symbol(SymbolExpr),
     /// A call expression, e.g. `foo()`, `bar(1, 2, 3)` or `baz(x, y, z)`.
     Call(CallExpr),
+    /// An if expression, e.g. `if true { 42 } else { 0 }`.
+    If(IfExpr),
+    /// A block expression, e.g. `{ 1 + 2 }`.
+    Block(Block),
 }
 
 impl Expr {
@@ -29,6 +35,22 @@ impl Expr {
             Expr::Binary(expr) => expr.span,
             Expr::Symbol(expr) => expr.span,
             Expr::Call(expr) => expr.span,
+            Expr::If(expr) => expr.span,
+            Expr::Block(block) => block.span,
+        }
+    }
+
+    /// Returns whether the expression requires a semicolon after it.
+    pub fn require_semicolon(&self) -> bool {
+        match self {
+            Expr::Atom(_) => true,
+            Expr::Literal(_) => true,
+            Expr::Unary(_) => true,
+            Expr::Binary(_) => true,
+            Expr::Symbol(_) => true,
+            Expr::Call(_) => true,
+            Expr::If(_) => false,
+            Expr::Block(_) => false,
         }
     }
 }
@@ -216,5 +238,18 @@ pub struct CallExpr {
     /// The arguments of the call expression.
     pub arguments: Box<[Expr]>,
     /// The span of the call expression in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents an if expression in the `zen` language.
+pub struct IfExpr {
+    /// The condition of the if expression.
+    pub condition: Box<Expr>,
+    /// The body of the if expression.
+    pub body: Block,
+    /// The else branch of the if expression.
+    pub else_body: Option<Block>,
+    /// The span of the if expression in the source code.
     pub span: Span,
 }

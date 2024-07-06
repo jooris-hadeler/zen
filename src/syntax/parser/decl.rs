@@ -80,32 +80,44 @@ impl Parser<'_> {
     }
 
     /// Parses a block of code.
-    fn parse_block(&mut self) -> Option<Block> {
+    pub(crate) fn parse_block(&mut self) -> Option<Block> {
         // Consume the `{`.
-        self.expect(TokenKind::LBrace)?;
+        let lbrace_token = self.expect(TokenKind::LBrace)?;
+        let mut span = lbrace_token.span;
 
         let mut exprs = Vec::new();
 
         if self.peek().kind != TokenKind::RBrace {
             loop {
                 // Parse the expression.
-                exprs.push(self.parse_expr()?);
+                let expr = self.parse_expr()?;
+                let require_semicolon = expr.require_semicolon();
 
-                if self.peek().kind == TokenKind::Semicolon {
-                    // Consume the `;`.
-                    self.consume();
+                exprs.push(expr);
+                
+                if require_semicolon {
+                    if self.peek().kind == TokenKind::Semicolon {
+                        // Consume the `;`.
+                        self.consume();
+                    } else {
+                        break;
+                    }
                 } else {
-                    break;
+                    if self.peek().kind == TokenKind::RBrace {
+                        break;
+                    }
                 }
             }
         }
 
         // Consume the `}`.
-        self.expect(TokenKind::RBrace)?;
+        let rbrace_token = self.expect(TokenKind::RBrace)?;
+        span.end = rbrace_token.span.end;
 
         // Create the block.
         Some(Block {
             exprs: exprs.into(),
+            span
         })
     }
 }

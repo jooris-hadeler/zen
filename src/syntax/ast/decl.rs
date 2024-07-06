@@ -35,4 +35,6 @@ pub struct Parameter {
 pub struct Block {
     /// The expressions in the block.
     pub exprs: Box<[Expr]>,
+    /// The span of the block in the source code.
+    pub span: Span,
 }

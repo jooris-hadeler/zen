@@ -3,8 +3,7 @@
 use crate::{
     source::Span,
     syntax::ast::{
-        AtomExpr, AtomKind, BinaryExpr, BinaryOp, CallExpr, EnumLiteral, Expr, LiteralExpr,
-        LiteralKind, SliceLiteral, StructField, StructLiteral, SymbolExpr, UnaryExpr, UnaryOp,
+        AtomExpr, AtomKind, BinaryExpr, BinaryOp, CallExpr, EnumLiteral, Expr, IfExpr, LiteralExpr, LiteralKind, SliceLiteral, StructField, StructLiteral, SymbolExpr, UnaryExpr, UnaryOp
     },
     token::TokenKind,
 };
@@ -12,15 +11,59 @@ use crate::{
 use super::Parser;
 
 impl Parser<'_> {
-    /// Parses an expression using the Pratt parsing algorithm.
+    /// Parses an expression.
     pub fn parse_expr(&mut self) -> Option<Expr> {
-        self.parse_expr_bp(0)
+        match self.peek().kind {
+            TokenKind::KwIf => self.parse_expr_if(),
+
+            _ => self.parse_expr_arithmetic(0)
+        }
     }
 
-    /// Parses an expression with a given binding power.
+    /// Parses an if expression.
+    fn parse_expr_if(&mut self) -> Option<Expr> {
+        let if_token = self.expect(TokenKind::KwIf)?;
+        let mut span = if_token.span;
+
+        // Parse the condition.
+        let condition = self.parse_expr_arithmetic(0)?;
+
+        // Parse the then block.
+        let body = self.parse_block()?;
+        span.end = body.span.end;
+
+        // Parse optional else block
+        let else_body = if self.peek().kind == TokenKind::KwElse {
+            // Consume the else token.
+            self.consume();
+
+            // Parse the else block.
+            let block = self.parse_block()?;
+            span.end = block.span.end;
+
+            Some(block)
+        } else {
+            None
+        };
+
+        Some(Expr::If(IfExpr {
+            condition: Box::new(condition),
+            body,
+            else_body,
+            span,
+        }))
+    }
+    
+    /// Parses a block expression.
+    fn parse_expr_block(&mut self) -> Option<Expr> {
+        let block = self.parse_block()?;
+        Some(Expr::Block(block))
+    }
+
+    /// Parses an arithmetic expression with a given binding power.
     /// The `min_binding_power` parameter is the minimum binding power of the operators to parse.
     /// This function uses the Pratt parsing algorithm.
-    fn parse_expr_bp(&mut self, min_binding_power: u8) -> Option<Expr> {
+    fn parse_expr_arithmetic(&mut self, min_binding_power: u8) -> Option<Expr> {
         // Parse the left-hand side of the expression.
         // Try to parse a prefix operator, otherwise parse an operand or grouped expression.
         let mut lhs = if let Some(op) = self.try_parse_prefix_op() {
@@ -30,7 +73,7 @@ impl Parser<'_> {
             let op_token = self.consume();
 
             // Parse the right-hand side of the unary expression.
-            let operand = self.parse_expr_bp(right_binding_power)?;
+            let operand = self.parse_expr_arithmetic(right_binding_power)?;
 
             // Create the unary expression.
             let span = Span::new(op_token.span.start, operand.span().end, self.source.id());
@@ -43,7 +86,7 @@ impl Parser<'_> {
             // Consume the left parenthesis.
             self.consume();
 
-            let expr = self.parse_expr_bp(0)?;
+            let expr = self.parse_expr_arithmetic(0)?;
 
             // Consume the right parenthesis.
             // TODO: if we add recovery, we should recover here.
@@ -106,7 +149,7 @@ impl Parser<'_> {
                 self.consume();
 
                 // Parse the right-hand side of the binary expression.
-                let rhs = self.parse_expr_bp(right_binding_power)?;
+                let rhs = self.parse_expr_arithmetic(right_binding_power)?;
                 let span = Span::new(lhs.span().start, rhs.span().end, self.source.id());
 
                 // Create the binary expression.
@@ -267,6 +310,7 @@ impl Parser<'_> {
         match self.peek().kind {
             TokenKind::Dot | TokenKind::LBracket => self.parse_expr_literal(),
             TokenKind::Symbol => self.parse_expr_symbol(),
+            TokenKind::LBrace => self.parse_expr_block(),
 
             // If the token is not a symbol or a dot, parse an atom expression.
             _ => self.parse_expr_atom(),
