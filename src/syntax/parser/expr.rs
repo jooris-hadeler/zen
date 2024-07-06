@@ -3,7 +3,9 @@
 use crate::{
     source::Span,
     syntax::ast::{
-        AtomExpr, AtomKind, BinaryExpr, BinaryOp, CallExpr, EnumLiteral, Expr, IfExpr, LiteralExpr, LiteralKind, SliceLiteral, StructField, StructLiteral, SymbolExpr, UnaryExpr, UnaryOp
+        AtomExpr, AtomKind, BinaryExpr, BinaryOp, CallExpr, EnumLiteral, Expr, IfExpr, LetExpr,
+        LiteralExpr, LiteralKind, SliceLiteral, StructField, StructLiteral, SymbolExpr, UnaryExpr,
+        UnaryOp,
     },
     token::TokenKind,
 };
@@ -13,11 +15,66 @@ use super::Parser;
 impl Parser<'_> {
     /// Parses an expression.
     pub fn parse_expr(&mut self) -> Option<Expr> {
+        self.parse_expr_internal(false)
+    }
+
+    /// Parses an expression, but allows for disallowing let expressions.
+    pub fn parse_expr_internal(&mut self, disallow_let_exprs: bool) -> Option<Expr> {
         match self.peek().kind {
             TokenKind::KwIf => self.parse_expr_if(),
+            TokenKind::KwLet if !disallow_let_exprs => self.parse_expr_let(),
 
-            _ => self.parse_expr_arithmetic(0)
+            _ => self.parse_expr_arithmetic(0),
         }
+    }
+
+    /// Parses a let expression.
+    fn parse_expr_let(&mut self) -> Option<Expr> {
+        let let_token = self.expect(TokenKind::KwLet)?;
+        let mut span = let_token.span;
+
+        // Parse the optional mutability annotation.
+        let mutable = if self.peek().kind == TokenKind::KwMut {
+            // Consume the mut token.
+            self.consume();
+
+            true
+        } else {
+            false
+        };
+
+        // Parse the name of the variable.
+        let name_token = self.expect(TokenKind::Symbol)?;
+        let name = name_token.text.into();
+
+        // Parse the optional type annotation.
+        let ty = if self.peek().kind == TokenKind::Colon {
+            // Consume the colon.
+            self.consume();
+
+            // Parse the type.
+            let ty = self.parse_type()?;
+            span.end = ty.span().end;
+
+            Some(ty)
+        } else {
+            None
+        };
+
+        // Parse the equals sign.
+        self.expect(TokenKind::Assign)?;
+
+        // Parse the value of the variable, this cannot be a let expression.
+        let value = self.parse_expr_internal(true)?;
+        span.end = value.span().end;
+
+        Some(Expr::Let(LetExpr {
+            name,
+            ty,
+            mutable,
+            value: Box::new(value),
+            span,
+        }))
     }
 
     /// Parses an if expression.
@@ -53,7 +110,7 @@ impl Parser<'_> {
             span,
         }))
     }
-    
+
     /// Parses a block expression.
     fn parse_expr_block(&mut self) -> Option<Expr> {
         let block = self.parse_block()?;

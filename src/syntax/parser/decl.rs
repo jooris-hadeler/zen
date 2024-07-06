@@ -95,7 +95,7 @@ impl Parser<'_> {
                 let require_semicolon = expr.require_semicolon();
 
                 exprs.push(expr);
-                
+
                 if require_semicolon {
                     if self.peek().kind == TokenKind::Semicolon {
                         // Consume the `;`.
@@ -120,7 +120,7 @@ impl Parser<'_> {
         Some(Block {
             exprs: exprs.into(),
             has_implicit_return,
-            span
+            span,
         })
     }
 }

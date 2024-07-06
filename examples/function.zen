@@ -1,4 +1,9 @@
 fn area(radius: f32) -> f32 {
-    print("Calculating area of circle with radius: ", radius, "\n");
-    PI * radius * radius
+    let area = {
+        let pi_sq = PI * PI;
+
+        pi_sq * radius
+    };
+
+    area
 }
