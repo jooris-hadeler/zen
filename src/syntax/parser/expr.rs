@@ -4,8 +4,8 @@ use crate::{
     source::Span,
     syntax::ast::{
         AtomExpr, AtomKind, BinaryExpr, BinaryOp, BlockExpr, BreakExpr, CallExpr, ContinueExpr,
-        EnumLiteral, Expr, IfExpr, LetExpr, LiteralExpr, LiteralKind, ReturnExpr, SliceLiteral,
-        StructField, StructLiteral, SymbolExpr, UnaryExpr, UnaryOp, WhileExpr,
+        EnumLiteral, Expr, ForExpr, IfExpr, LetExpr, LiteralExpr, LiteralKind, ReturnExpr,
+        SliceLiteral, StructField, StructLiteral, SymbolExpr, UnaryExpr, UnaryOp, WhileExpr,
     },
     token::TokenKind,
 };
@@ -23,6 +23,7 @@ impl Parser<'_> {
         match self.peek().kind {
             TokenKind::KwIf => self.parse_expr_if(),
             TokenKind::KwWhile => self.parse_expr_while(),
+            TokenKind::KwFor => self.parse_expr_for(),
 
             // These expressions are not allowed inside the value of a let expression.
             TokenKind::KwLet if !inside_let_value => self.parse_expr_let(),
@@ -32,6 +33,33 @@ impl Parser<'_> {
 
             _ => self.parse_expr_arithmetic(0),
         }
+    }
+
+    /// Parses a for expression.
+    fn parse_expr_for(&mut self) -> Option<Expr> {
+        let for_token = self.expect(TokenKind::KwFor)?;
+        let mut span = for_token.span;
+
+        // Parse the name of the variable.
+        let name_token = self.expect(TokenKind::Symbol)?;
+        let name = name_token.text.into();
+
+        // Parse the `in` keyword.
+        self.expect(TokenKind::KwIn)?;
+
+        // Parse the expression.
+        let iterable = self.parse_expr()?;
+
+        // Parse the body.
+        let body = self.parse_expr_block()?;
+        span.end = body.span().end;
+
+        Some(Expr::For(ForExpr {
+            name,
+            iterable: Box::new(iterable),
+            body: Box::new(body),
+            span,
+        }))
     }
 
     /// Parses a continue expression.

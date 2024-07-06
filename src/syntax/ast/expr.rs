@@ -33,6 +33,8 @@ pub enum Expr {
     Return(ReturnExpr),
     /// A continue expression, e.g. `continue`.
     Continue(ContinueExpr),
+    /// A for loop expression, e.g. `for x in 0..10 { 42 }`.
+    For(ForExpr),
 }
 
 impl Expr {
@@ -52,6 +54,7 @@ impl Expr {
             Expr::Break(expr) => expr.span,
             Expr::Return(expr) => expr.span,
             Expr::Continue(expr) => expr.span,
+            Expr::For(expr) => expr.span,
         }
     }
 
@@ -71,6 +74,7 @@ impl Expr {
             Expr::Break(_) => true,
             Expr::Return(_) => true,
             Expr::Continue(_) => true,
+            Expr::For(_) => false,
         }
     }
 }
@@ -333,5 +337,18 @@ pub struct ReturnExpr {
 /// Represents a continue expression in the `zen` language.
 pub struct ContinueExpr {
     /// The span of the continue expression in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a for loop in the `zen` language.
+pub struct ForExpr {
+    /// The variable name of the for loop.
+    pub name: Box<str>,
+    /// The expression being iterated over.
+    pub iterable: Box<Expr>,
+    /// The body of the for loop.
+    pub body: Box<Expr>,
+    /// The span of the for loop in the source code.
     pub span: Span,
 }
