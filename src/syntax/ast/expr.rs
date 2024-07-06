@@ -2,7 +2,7 @@
 
 use crate::source::Span;
 
-use super::{Block, Type};
+use super::Type;
 
 #[derive(Debug, PartialEq)]
 /// Represents an expression in the `zen` language.
@@ -22,7 +22,7 @@ pub enum Expr {
     /// An if expression, e.g. `if true { 42 } else { 0 }`.
     If(IfExpr),
     /// A block expression, e.g. `{ 1 + 2 }`.
-    Block(Block),
+    Block(BlockExpr),
     /// A let expression, e.g. `let x = 42`.
     Let(LetExpr),
 }
@@ -251,9 +251,9 @@ pub struct IfExpr {
     /// The condition of the if expression.
     pub condition: Box<Expr>,
     /// The body of the if expression.
-    pub body: Block,
+    pub body: Box<Expr>,
     /// The else branch of the if expression.
-    pub else_body: Option<Block>,
+    pub else_body: Option<Box<Expr>>,
     /// The span of the if expression in the source code.
     pub span: Span,
 }
@@ -270,5 +270,16 @@ pub struct LetExpr {
     /// If the variable is mutable.
     pub mutable: bool,
     /// The span of the let expression in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a block expression in the `zen` language.
+pub struct BlockExpr {
+    /// The expressions in the block.
+    pub exprs: Box<[Expr]>,
+    /// If the block has an implicit return.
+    pub has_implicit_return: bool,
+    /// The span of the block in the source code.
     pub span: Span,
 }

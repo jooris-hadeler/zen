@@ -3,9 +3,9 @@
 use crate::{
     source::Span,
     syntax::ast::{
-        AtomExpr, AtomKind, BinaryExpr, BinaryOp, CallExpr, EnumLiteral, Expr, IfExpr, LetExpr,
-        LiteralExpr, LiteralKind, SliceLiteral, StructField, StructLiteral, SymbolExpr, UnaryExpr,
-        UnaryOp,
+        AtomExpr, AtomKind, BinaryExpr, BinaryOp, BlockExpr, CallExpr, EnumLiteral, Expr, IfExpr,
+        LetExpr, LiteralExpr, LiteralKind, SliceLiteral, StructField, StructLiteral, SymbolExpr,
+        UnaryExpr, UnaryOp,
     },
     token::TokenKind,
 };
@@ -86,8 +86,8 @@ impl Parser<'_> {
         let condition = self.parse_expr_arithmetic(0)?;
 
         // Parse the then block.
-        let body = self.parse_block()?;
-        span.end = body.span.end;
+        let body = self.parse_expr_block()?;
+        span.end = body.span().end;
 
         // Parse optional else block
         let else_body = if self.peek().kind == TokenKind::KwElse {
@@ -95,26 +95,20 @@ impl Parser<'_> {
             self.consume();
 
             // Parse the else block.
-            let block = self.parse_block()?;
-            span.end = block.span.end;
+            let block = self.parse_expr_block()?;
+            span.end = block.span().end;
 
-            Some(block)
+            Some(Box::new(block))
         } else {
             None
         };
 
         Some(Expr::If(IfExpr {
             condition: Box::new(condition),
-            body,
+            body: Box::new(body),
             else_body,
             span,
         }))
-    }
-
-    /// Parses a block expression.
-    fn parse_expr_block(&mut self) -> Option<Expr> {
-        let block = self.parse_block()?;
-        Some(Expr::Block(block))
     }
 
     /// Parses an arithmetic expression with a given binding power.
@@ -639,5 +633,50 @@ impl Parser<'_> {
         let span = token.span;
 
         Some(Expr::Symbol(SymbolExpr { name, span }))
+    }
+
+    /// Parses a block expression.
+    pub fn parse_expr_block(&mut self) -> Option<Expr> {
+        // Consume the `{`.
+        let lbrace_token = self.expect(TokenKind::LBrace)?;
+        let mut span = lbrace_token.span;
+
+        let mut has_implicit_return = false;
+        let mut exprs = Vec::new();
+
+        if self.peek().kind != TokenKind::RBrace {
+            loop {
+                // Parse the expression.
+                let expr = self.parse_expr()?;
+                let require_semicolon = expr.require_semicolon();
+
+                exprs.push(expr);
+
+                if require_semicolon {
+                    if self.peek().kind == TokenKind::Semicolon {
+                        // Consume the `;`.
+                        self.consume();
+                    } else {
+                        has_implicit_return = true;
+                        break;
+                    }
+                }
+
+                if self.peek().kind == TokenKind::RBrace {
+                    break;
+                }
+            }
+        }
+
+        // Consume the `}`.
+        let rbrace_token = self.expect(TokenKind::RBrace)?;
+        span.end = rbrace_token.span.end;
+
+        // Create the block.
+        Some(Expr::Block(BlockExpr {
+            exprs: exprs.into(),
+            has_implicit_return,
+            span,
+        }))
     }
 }

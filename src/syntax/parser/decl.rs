@@ -1,7 +1,7 @@
 //! This module contains the parser for declarations in the `zen` language.
 
 use crate::{
-    syntax::ast::{Block, Function, Parameter},
+    syntax::ast::{Function, Parameter},
     token::TokenKind,
 };
 
@@ -33,7 +33,7 @@ impl Parser<'_> {
         };
 
         // Parse the body of the function.
-        let body = self.parse_block()?;
+        let body = self.parse_expr_block()?;
 
         // Create the function.
         Some(Function {
@@ -64,6 +64,7 @@ impl Parser<'_> {
         Some(params.into())
     }
 
+    /// Parses a single function parameter.
     fn parse_function_param(&mut self) -> Option<Parameter> {
         // Consume the name of the parameter.
         let name_token = self.expect(TokenKind::Symbol)?;
@@ -77,50 +78,5 @@ impl Parser<'_> {
         span.end = ty.span().end;
 
         Some(Parameter { name, ty, span })
-    }
-
-    /// Parses a block of code.
-    pub(crate) fn parse_block(&mut self) -> Option<Block> {
-        // Consume the `{`.
-        let lbrace_token = self.expect(TokenKind::LBrace)?;
-        let mut span = lbrace_token.span;
-
-        let mut has_implicit_return = false;
-        let mut exprs = Vec::new();
-
-        if self.peek().kind != TokenKind::RBrace {
-            loop {
-                // Parse the expression.
-                let expr = self.parse_expr()?;
-                let require_semicolon = expr.require_semicolon();
-
-                exprs.push(expr);
-
-                if require_semicolon {
-                    if self.peek().kind == TokenKind::Semicolon {
-                        // Consume the `;`.
-                        self.consume();
-                    } else {
-                        has_implicit_return = true;
-                        break;
-                    }
-                }
-
-                if self.peek().kind == TokenKind::RBrace {
-                    break;
-                }
-            }
-        }
-
-        // Consume the `}`.
-        let rbrace_token = self.expect(TokenKind::RBrace)?;
-        span.end = rbrace_token.span.end;
-
-        // Create the block.
-        Some(Block {
-            exprs: exprs.into(),
-            has_implicit_return,
-            span,
-        })
     }
 }

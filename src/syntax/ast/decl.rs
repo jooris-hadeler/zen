@@ -13,8 +13,8 @@ pub struct Function {
     pub params: Box<[Parameter]>,
     /// The return type of the function.
     pub return_type: Option<Type>,
-    /// The body of the function.
-    pub body: Block,
+    /// The body of the function, which is always a block expression.
+    pub body: Expr,
     /// The span of the function in the source code.
     pub span: Span,
 }
@@ -27,16 +27,5 @@ pub struct Parameter {
     /// The type of the parameter.
     pub ty: Box<Type>,
     /// The span of the parameter in the source code.
-    pub span: Span,
-}
-
-#[derive(Debug, PartialEq)]
-/// Represents a block of code in the `zen` language.
-pub struct Block {
-    /// The expressions in the block.
-    pub exprs: Box<[Expr]>,
-    /// If the block has an implicit return.
-    pub has_implicit_return: bool,
-    /// The span of the block in the source code.
     pub span: Span,
 }
