@@ -85,6 +85,7 @@ impl Parser<'_> {
         let lbrace_token = self.expect(TokenKind::LBrace)?;
         let mut span = lbrace_token.span;
 
+        let mut has_implicit_return = false;
         let mut exprs = Vec::new();
 
         if self.peek().kind != TokenKind::RBrace {
@@ -100,12 +101,13 @@ impl Parser<'_> {
                         // Consume the `;`.
                         self.consume();
                     } else {
+                        has_implicit_return = true;
                         break;
                     }
-                } else {
-                    if self.peek().kind == TokenKind::RBrace {
-                        break;
-                    }
+                }
+
+                if self.peek().kind == TokenKind::RBrace {
+                    break;
                 }
             }
         }
@@ -117,6 +119,7 @@ impl Parser<'_> {
         // Create the block.
         Some(Block {
             exprs: exprs.into(),
+            has_implicit_return,
             span
         })
     }

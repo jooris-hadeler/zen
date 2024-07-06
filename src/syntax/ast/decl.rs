@@ -35,6 +35,8 @@ pub struct Parameter {
 pub struct Block {
     /// The expressions in the block.
     pub exprs: Box<[Expr]>,
+    /// If the block has an implicit return.
+    pub has_implicit_return: bool,
     /// The span of the block in the source code.
     pub span: Span,
 }
