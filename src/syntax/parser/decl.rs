@@ -66,6 +66,9 @@ impl Parser<'_> {
 
     /// Parses a single function parameter.
     fn parse_function_param(&mut self) -> Option<Parameter> {
+        // Parse the optional `mut`.
+        let mutable = self.eat(TokenKind::KwMut);
+
         // Consume the name of the parameter.
         let name_token = self.expect(TokenKind::Symbol)?;
         let name = name_token.text.into_boxed_str();
@@ -77,6 +80,6 @@ impl Parser<'_> {
         let ty = Box::new(self.parse_type()?);
         span.end = ty.span().end;
 
-        Some(Parameter { name, ty, span })
+        Some(Parameter { name, ty, mutable, span })
     }
 }

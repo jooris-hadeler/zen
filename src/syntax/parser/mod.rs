@@ -81,6 +81,16 @@ impl<'src> Parser<'src> {
         }
     }
 
+    /// Tries to eat the current token if it is of the given kind.
+    fn eat(&mut self, kind: TokenKind) -> bool {
+        if self.peek().kind == kind {
+            self.consume();
+            true
+        } else {
+            false
+        }
+    }
+
     /// Peeks at the next token in the source.
     fn peek(&mut self) -> &Token {
         // If we haven't started parsing yet, advance to the first token.

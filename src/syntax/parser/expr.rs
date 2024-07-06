@@ -34,14 +34,7 @@ impl Parser<'_> {
         let mut span = let_token.span;
 
         // Parse the optional mutability annotation.
-        let mutable = if self.peek().kind == TokenKind::KwMut {
-            // Consume the mut token.
-            self.consume();
-
-            true
-        } else {
-            false
-        };
+        let mutable = self.eat(TokenKind::KwMut);
 
         // Parse the name of the variable.
         let name_token = self.expect(TokenKind::Symbol)?;

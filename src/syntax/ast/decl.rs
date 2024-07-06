@@ -26,6 +26,8 @@ pub struct Parameter {
     pub name: Box<str>,
     /// The type of the parameter.
     pub ty: Box<Type>,
+    /// If the parameter is mutable.
+    pub mutable: bool,
     /// The span of the parameter in the source code.
     pub span: Span,
 }
