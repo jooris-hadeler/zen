@@ -1,9 +1,13 @@
-fn area(radius: f32) -> f32 {
-    let area = {
-        let pi_sq = PI * PI;
+fn fibonacci(mut n: u32) -> u32 {
+    let mut a = 0;
+    let mut b = 1;
 
-        pi_sq * radius
-    };
+    while n > 1 {
+        let t = a + b;
+        a = b;
+        b = t;
+        n = n - 1;
+    }
 
-    area
+    a
 }

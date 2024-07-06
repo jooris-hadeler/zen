@@ -5,7 +5,7 @@ use crate::{
     syntax::ast::{
         AtomExpr, AtomKind, BinaryExpr, BinaryOp, BlockExpr, CallExpr, EnumLiteral, Expr, IfExpr,
         LetExpr, LiteralExpr, LiteralKind, SliceLiteral, StructField, StructLiteral, SymbolExpr,
-        UnaryExpr, UnaryOp,
+        UnaryExpr, UnaryOp, WhileExpr,
     },
     token::TokenKind,
 };
@@ -23,9 +23,29 @@ impl Parser<'_> {
         match self.peek().kind {
             TokenKind::KwIf => self.parse_expr_if(),
             TokenKind::KwLet if !disallow_let_exprs => self.parse_expr_let(),
+            TokenKind::KwWhile => self.parse_expr_while(),
 
             _ => self.parse_expr_arithmetic(0),
         }
+    }
+
+    /// Parses a while expression.
+    fn parse_expr_while(&mut self) -> Option<Expr> {
+        let while_token = self.expect(TokenKind::KwWhile)?;
+        let mut span = while_token.span;
+
+        // Parse the condition.
+        let condition = self.parse_expr_arithmetic(0)?;
+
+        // Parse the body.
+        let body = self.parse_expr_block()?;
+        span.end = body.span().end;
+
+        Some(Expr::While(WhileExpr {
+            condition: Box::new(condition),
+            body: Box::new(body),
+            span,
+        }))
     }
 
     /// Parses a let expression.

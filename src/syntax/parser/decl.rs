@@ -80,6 +80,11 @@ impl Parser<'_> {
         let ty = Box::new(self.parse_type()?);
         span.end = ty.span().end;
 
-        Some(Parameter { name, ty, mutable, span })
+        Some(Parameter {
+            name,
+            ty,
+            mutable,
+            span,
+        })
     }
 }

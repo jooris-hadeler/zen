@@ -25,6 +25,8 @@ pub enum Expr {
     Block(BlockExpr),
     /// A let expression, e.g. `let x = 42`.
     Let(LetExpr),
+    /// A while expression, e.g. `while true { 42 }`.
+    While(WhileExpr),
 }
 
 impl Expr {
@@ -40,6 +42,7 @@ impl Expr {
             Expr::If(expr) => expr.span,
             Expr::Block(block) => block.span,
             Expr::Let(expr) => expr.span,
+            Expr::While(expr) => expr.span,
         }
     }
 
@@ -55,6 +58,7 @@ impl Expr {
             Expr::If(_) => false,
             Expr::Block(_) => false,
             Expr::Let(_) => true,
+            Expr::While(_) => false,
         }
     }
 }
@@ -281,5 +285,16 @@ pub struct BlockExpr {
     /// If the block has an implicit return.
     pub has_implicit_return: bool,
     /// The span of the block in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a while expression in the `zen` language.
+pub struct WhileExpr {
+    /// The condition of the while expression.
+    pub condition: Box<Expr>,
+    /// The body of the while expression.
+    pub body: Box<Expr>,
+    /// The span of the while expression in the source code.
     pub span: Span,
 }
