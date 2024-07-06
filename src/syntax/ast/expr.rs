@@ -29,6 +29,8 @@ pub enum Expr {
     While(WhileExpr),
     /// A break expression, e.g. `break 10`.
     Break(BreakExpr),
+    /// A return expression, e.g. `return 42`.
+    Return(ReturnExpr),
 }
 
 impl Expr {
@@ -46,6 +48,7 @@ impl Expr {
             Expr::Let(expr) => expr.span,
             Expr::While(expr) => expr.span,
             Expr::Break(expr) => expr.span,
+            Expr::Return(expr) => expr.span,
         }
     }
 
@@ -63,6 +66,7 @@ impl Expr {
             Expr::Let(_) => true,
             Expr::While(_) => false,
             Expr::Break(_) => true,
+            Expr::Return(_) => true,
         }
     }
 }
@@ -309,5 +313,14 @@ pub struct BreakExpr {
     /// The optional value of the break expression.
     pub value: Option<Box<Expr>>,
     /// The span of the break expression in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a return expression in the `zen` language.
+pub struct ReturnExpr {
+    /// The optional value of the return expression.
+    pub value: Option<Box<Expr>>,
+    /// The span of the return expression in the source code.
     pub span: Span,
 }

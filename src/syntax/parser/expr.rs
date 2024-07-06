@@ -4,8 +4,8 @@ use crate::{
     source::Span,
     syntax::ast::{
         AtomExpr, AtomKind, BinaryExpr, BinaryOp, BlockExpr, BreakExpr, CallExpr, EnumLiteral,
-        Expr, IfExpr, LetExpr, LiteralExpr, LiteralKind, SliceLiteral, StructField, StructLiteral,
-        SymbolExpr, UnaryExpr, UnaryOp, WhileExpr,
+        Expr, IfExpr, LetExpr, LiteralExpr, LiteralKind, ReturnExpr, SliceLiteral, StructField,
+        StructLiteral, SymbolExpr, UnaryExpr, UnaryOp, WhileExpr,
     },
     token::TokenKind,
 };
@@ -23,12 +23,31 @@ impl Parser<'_> {
         match self.peek().kind {
             TokenKind::KwIf => self.parse_expr_if(),
             TokenKind::KwWhile => self.parse_expr_while(),
-            
+
             TokenKind::KwLet if !inside_let_value => self.parse_expr_let(),
             TokenKind::KwBreak if !inside_let_value => self.parse_expr_break(),
+            TokenKind::KwReturn if !inside_let_value => self.parse_expr_return(),
 
             _ => self.parse_expr_arithmetic(0),
         }
+    }
+
+    /// Parses a return expression.
+    fn parse_expr_return(&mut self) -> Option<Expr> {
+        let return_token = self.expect(TokenKind::KwReturn)?;
+        let mut span = return_token.span;
+
+        // Parse the optional expression.
+        let value = if self.peek().kind != TokenKind::Semicolon {
+            let expr = self.parse_expr()?;
+            span.end = expr.span().end;
+
+            Some(Box::new(expr))
+        } else {
+            None
+        };
+
+        Some(Expr::Return(ReturnExpr { value, span }))
     }
 
     /// Parses a break expression.
