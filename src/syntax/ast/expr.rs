@@ -27,6 +27,8 @@ pub enum Expr {
     Let(LetExpr),
     /// A while expression, e.g. `while true { 42 }`.
     While(WhileExpr),
+    /// A break expression, e.g. `break 10`.
+    Break(BreakExpr),
 }
 
 impl Expr {
@@ -43,6 +45,7 @@ impl Expr {
             Expr::Block(block) => block.span,
             Expr::Let(expr) => expr.span,
             Expr::While(expr) => expr.span,
+            Expr::Break(expr) => expr.span,
         }
     }
 
@@ -59,6 +62,7 @@ impl Expr {
             Expr::Block(_) => false,
             Expr::Let(_) => true,
             Expr::While(_) => false,
+            Expr::Break(_) => true,
         }
     }
 }
@@ -296,5 +300,14 @@ pub struct WhileExpr {
     /// The body of the while expression.
     pub body: Box<Expr>,
     /// The span of the while expression in the source code.
+    pub span: Span,
+}
+
+#[derive(Debug, PartialEq)]
+/// Represents a break expression in the `zen` language.
+pub struct BreakExpr {
+    /// The optional value of the break expression.
+    pub value: Option<Box<Expr>>,
+    /// The span of the break expression in the source code.
     pub span: Span,
 }

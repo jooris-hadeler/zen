@@ -3,9 +3,9 @@
 use crate::{
     source::Span,
     syntax::ast::{
-        AtomExpr, AtomKind, BinaryExpr, BinaryOp, BlockExpr, CallExpr, EnumLiteral, Expr, IfExpr,
-        LetExpr, LiteralExpr, LiteralKind, SliceLiteral, StructField, StructLiteral, SymbolExpr,
-        UnaryExpr, UnaryOp, WhileExpr,
+        AtomExpr, AtomKind, BinaryExpr, BinaryOp, BlockExpr, BreakExpr, CallExpr, EnumLiteral,
+        Expr, IfExpr, LetExpr, LiteralExpr, LiteralKind, SliceLiteral, StructField, StructLiteral,
+        SymbolExpr, UnaryExpr, UnaryOp, WhileExpr,
     },
     token::TokenKind,
 };
@@ -18,15 +18,35 @@ impl Parser<'_> {
         self.parse_expr_internal(false)
     }
 
-    /// Parses an expression, but allows for disallowing let expressions.
-    pub fn parse_expr_internal(&mut self, disallow_let_exprs: bool) -> Option<Expr> {
+    /// Parses an expression, but allows for disallowing expressions which make no sense in let expressions.
+    pub fn parse_expr_internal(&mut self, inside_let_value: bool) -> Option<Expr> {
         match self.peek().kind {
             TokenKind::KwIf => self.parse_expr_if(),
-            TokenKind::KwLet if !disallow_let_exprs => self.parse_expr_let(),
             TokenKind::KwWhile => self.parse_expr_while(),
+            
+            TokenKind::KwLet if !inside_let_value => self.parse_expr_let(),
+            TokenKind::KwBreak if !inside_let_value => self.parse_expr_break(),
 
             _ => self.parse_expr_arithmetic(0),
         }
+    }
+
+    /// Parses a break expression.
+    fn parse_expr_break(&mut self) -> Option<Expr> {
+        let break_token = self.expect(TokenKind::KwBreak)?;
+        let mut span = break_token.span;
+
+        // Parse the optional expression.
+        let value = if self.peek().kind != TokenKind::Semicolon {
+            let expr = self.parse_expr()?;
+            span.end = expr.span().end;
+
+            Some(Box::new(expr))
+        } else {
+            None
+        };
+
+        Some(Expr::Break(BreakExpr { value, span }))
     }
 
     /// Parses a while expression.
